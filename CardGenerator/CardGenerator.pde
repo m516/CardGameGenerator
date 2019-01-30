@@ -29,13 +29,13 @@ import processing.pdf.*;
 
 PGraphicsPDF pdf;
 
-void settings(){
+void settings() {
   NUM_ROWS = int(PAGE_HEIGHT_INCHES/(CARD_HEIGHT_PIXELS/DPI));
   NUM_COLS = int(PAGE_WIDTH_INCHES/(CARD_WIDTH_PIXELS/DPI));
-  
+
   int w = NUM_COLS*CARD_WIDTH_PIXELS;
   int h = NUM_ROWS*CARD_HEIGHT_PIXELS;
-  size(w,h,PDF,"cards.pdf");
+  size(w, h, PDF, "cards.pdf");
 }
 
 void setup() {
@@ -43,21 +43,46 @@ void setup() {
 }
 
 void draw() {
-  
+
+  ArrayList<Card> cardList = new ArrayList<Card>(NUM_ROWS*NUM_COLS); //Used to draw the backs of the cards
+
   PGraphicsPDF pdf = (PGraphicsPDF) g;  // Get the renderer
-  
+
+
+
   int x = 0, y = 0;
-  for(Card card: cards){
-    for(int i = 0; i < (isPreview?1:card.count); i++){
-      drawCard(card, x*CARD_WIDTH_PIXELS, y*CARD_HEIGHT_PIXELS);
+  for (Card card : cards) {
+    for (int i = 0; i < (isPreview?1:card.count); i++) {
+      card.drawCard(x*CARD_WIDTH_PIXELS, y*CARD_HEIGHT_PIXELS);
+      cardList.add(card);
       x=(x+1)%NUM_COLS;
-      if(x==0){
+      if (x==0) {
         y=(y+1)%NUM_ROWS;
-        if(y==0){
+        if (y==0) {
+          pdf.nextPage();
+          //Print reverses
+
+          for (int p = 0; p < NUM_COLS; p++) {
+            for (int q = 0; q < NUM_ROWS; q++) {
+              if (q*NUM_COLS+p>=cardList.size()) break;
+              cardList.get(q*NUM_COLS+p).drawReverse(CARD_WIDTH_PIXELS*NUM_COLS-(p+1)*CARD_WIDTH_PIXELS, q*CARD_HEIGHT_PIXELS);
+            }
+          }
+          cardList.clear();
           pdf.nextPage();
         }
       }
     }
   }
+
+  pdf.nextPage();
+  //Print reverses
+  for (int p = 0; p < NUM_COLS; p++) {
+    for (int q = 0; q < NUM_ROWS; q++) {
+      if (q*NUM_COLS+p>=cardList.size()) break;
+      cardList.get(q*NUM_COLS+p).drawReverse(CARD_WIDTH_PIXELS*NUM_COLS-(p+1)*CARD_WIDTH_PIXELS, q*CARD_HEIGHT_PIXELS);
+    }
+  }
+  cardList.clear();
   exit();
 }
